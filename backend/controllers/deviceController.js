@@ -27,6 +27,9 @@ exports.saveData = async (req, res) => {
     const newData = new DeviceData(req.body);
     await newData.save();
 
+    // ⭐ Send to WebSocket clients ⭐
+    const io = req.app.get("io");
+    io.to(device_name).emit("device_update", newData);
     // ⭐ UPDATE LAST ACTIVE HERE ⭐
     try {
       await DeviceMetadata.findOneAndUpdate(
