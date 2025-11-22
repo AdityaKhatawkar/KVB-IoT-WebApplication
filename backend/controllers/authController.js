@@ -85,6 +85,9 @@ exports.login = async (req, res) => {
     if (!isMatch)
       return res.status(400).json({ message: "Invalid credentials" });
 
+    user.lastActive = new Date();
+    await user.save();
+
     const token = signToken(user);
 
     res.json({
@@ -95,6 +98,7 @@ exports.login = async (req, res) => {
         email: user.email,
         phone: user.phone,
         role: user.role,
+        lastActive: user.lastActive,
       },
     });
   } catch (err) {

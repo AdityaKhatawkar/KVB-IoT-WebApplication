@@ -46,7 +46,7 @@ exports.saveData = async (req, res) => {
     // 3. Keep only last 5 readings for this specific device
     const readings = await DeviceData.find({ device_name })
       .sort({ timestamp: -1 })
-      .skip(5);
+      .skip(50);
 
     if (readings.length > 0) {
       const idsToDelete = readings.map((r) => r._id);

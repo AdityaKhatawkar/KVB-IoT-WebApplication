@@ -68,7 +68,10 @@ const userSchema = new mongoose.Schema(
 
     devices: [{ type: String }],
 
-    // NEW FIELD (from V2) — required for preset access system
+    // NEW FIELD — Track user activity
+    lastActive: { type: Date, default: null },
+
+    // NEW FIELD — Preset access system
     accessiblePresets: [
       {
         preset: { type: mongoose.Schema.Types.ObjectId, ref: "Crop" },
@@ -81,5 +84,3 @@ const userSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model("User", userSchema);
-
-

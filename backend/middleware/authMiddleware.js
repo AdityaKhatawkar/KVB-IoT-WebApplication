@@ -57,10 +57,16 @@ async function protect(req, res, next) {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    const user = await User.findById(decoded.id).select("-password");
+    let user = await User.findById(decoded.id).select("-password");
     if (!user) {
-      return res.status(401).json({ message: "Not authorized, user not found" });
+      return res
+        .status(401)
+        .json({ message: "Not authorized, user not found" });
     }
+
+    // ⭐ UPDATE LAST ACTIVE EVERY TIME USER CALLS ANY API ⭐
+    user.lastActive = new Date();
+    await user.save();
 
     req.user = user;
     next();
@@ -79,12 +85,11 @@ function adminOnly(req, res, next) {
   }
 
   if (req.user.role !== "admin") {
-    return res
-      .status(403)
-      .json({ message: "Access denied. Admins only." });
+    return res.status(403).json({ message: "Access denied. Admins only." });
   }
 
   next();
 }
 
 module.exports = { protect, adminOnly };
+

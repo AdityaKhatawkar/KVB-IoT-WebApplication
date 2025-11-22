@@ -153,7 +153,7 @@ exports.getUsers = async (req, res) => {
   try {
     const users = await User.find(
       {},
-      "name phone email devices location.state location.city"
+      "name phone email devices location.state location.city lastActive"
     ).lean();
 
     const formatted = users.map((u) => ({
@@ -164,6 +164,7 @@ exports.getUsers = async (req, res) => {
       state: u.location?.state || "",
       city: u.location?.city || "",
       devices: u.devices || [],
+      lastActive: u.lastActive || null, // ⭐ VERY IMPORTANT
     }));
 
     res.json(formatted);

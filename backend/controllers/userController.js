@@ -370,3 +370,20 @@ exports.removePresetFromUser = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
+// GET /api/users/online
+exports.getOnlineUsers = async (req, res) => {
+  try {
+    const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000);
+
+    const users = await User.find({
+      lastActive: { $gte: tenMinAgo }
+    }).select("name email devices lastActive");
+
+    res.json({ users });
+  } catch (err) {
+    console.error("Error fetching online users:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};

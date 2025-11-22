@@ -1,5 +1,5 @@
-const isDevelopment = process.env.NODE_ENV === 'development';
+const isRailway = typeof window !== "undefined" && window.location.hostname.includes("railway");
 
-export const API_BASE_URL = isDevelopment 
-  ? 'http://localhost:5000' 
-  : 'https://kvbproject-production.up.railway.app'; 
+export const API_BASE_URL = isRailway
+  ? "https://kvbproject-production.up.railway.app"
+  : "http://localhost:5000";

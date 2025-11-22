@@ -498,7 +498,7 @@ useEffect(() => {
               <div className="bg-red-50 rounded-lg p-4 border border-red-200">
                 <div className="text-center mb-4">
                   <div className="text-lg font-bold text-slate-800 flex items-center justify-center gap-2">
-                    🌡️ Temperature (last 5 readings)
+                    🌡️ Temperature
                   </div>
                 </div>
                 <div className="h-64">
@@ -548,7 +548,7 @@ useEffect(() => {
               <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
                 <div className="text-center mb-4">
                   <div className="text-lg font-bold text-slate-800 flex items-center justify-center gap-2">
-                    💧 Humidity (last 5 readings)
+                    💧 Humidity
                   </div>
                 </div>
                 <div className="h-64">

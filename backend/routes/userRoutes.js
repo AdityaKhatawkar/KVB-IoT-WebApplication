@@ -16,6 +16,8 @@ const {
 
 const { getActiveDeviceCount } = require("../controllers/deviceController");
 const dashboardController = require("../controllers/dashboardController");
+const { getOnlineUsers } = require("../controllers/userController");
+
 
 // ===============================
 // STATIC ROUTES (MUST COME FIRST)
@@ -100,6 +102,7 @@ router.get("/me", protect, async (req, res) => {
 
 // Counts
 router.get("/count", getUserCount);
+router.get("/online", protect, adminOnly, getOnlineUsers);
 router.get("/devices/count", getDeviceCount);
 router.get("/devices/active", getActiveDeviceCount);
 
