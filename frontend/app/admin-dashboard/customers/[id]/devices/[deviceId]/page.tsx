@@ -482,7 +482,8 @@
 
 
 "use client";
-import { useEffect, useRef, useState } from "react";
+
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import AdminSidebarLayout from "@/components/admin/AdminSidebarLayout";
 import { Button } from "@/components/ui/button";
@@ -496,6 +497,21 @@ import {
   Tooltip,
 } from "recharts";
 import { API_BASE_URL } from "@/lib/config";
+
+type Log = {
+  _id: string;
+  timestamp?: string;
+  device_name: string;
+  temperature?: number;
+  humidity?: number;
+  set_temperature?: number;
+  set_humidity?: number;
+  ac_fan_status?: number;
+  dc_fan_status?: number;
+  circular_fan_speed?: number;
+  operation_mode?: string;
+  device_status?: number;
+};
 
 export default function AdminDeviceDataPage() {
   const params = useParams<{ id: string; deviceId: string }>();
@@ -521,23 +537,63 @@ export default function AdminDeviceDataPage() {
 
   const [liveHistory, setLiveHistory] = useState<any[]>([]);
 
-  // Historical trends states (admin extra)
+  // Historical trends states (config history)
   const [history, setHistory] = useState<any[]>([]);
   const [historyRange, setHistoryRange] = useState<string>("30d");
   const [historyCustomStart, setHistoryCustomStart] = useState<string>("");
   const [historyCustomEnd, setHistoryCustomEnd] = useState<string>("");
 
+  // Logs tab states (sensor logs, same as user logs)
+  const [fromDateTime, setFromDateTime] = useState<string>("");
+  const [toDateTime, setToDateTime] = useState<string>("");
+  const [logs, setLogs] = useState<Log[]>([]);
+  const [logsLoading, setLogsLoading] = useState<boolean>(false);
+  const [logsError, setLogsError] = useState<string>("");
+
   // Tabs
-  const [activeTab, setActiveTab] = useState<"live" | "history">("live");
+  const [activeTab, setActiveTab] = useState<"live" | "history" | "logs">(
+    "live"
+  );
 
   // Refs for socket and inactivity logic
   const lastReceivedRef = useRef<number | null>(null);
   const socketRef = useRef<any>(null);
 
+  // Helpers
+  const pad = (n: number) => String(n).padStart(2, "0");
+
+  const toDate = (iso?: string) => {
+    if (!iso) return "";
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return "";
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(
+      d.getDate()
+    )}`;
+  };
+
+  const toTime = (iso?: string) => {
+    if (!iso) return "";
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return "";
+    return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(
+      d.getSeconds()
+    )}`;
+  };
+
+  const getFanStatus = (status: number | null | undefined) => {
+    if (status === null || status === undefined) return "";
+    return status === 1 ? "ON" : "OFF";
+  };
+
+  const getDeviceStatus = (status: number | null | undefined) => {
+    if (status === null || status === undefined) return "";
+    return status === 1 ? "Online" : "Offline";
+  };
+
   // Helper for gauge arcs
   const gaugeDash = (value: number | null, max = 100) => {
     const circumference = 283;
-    if (value === null || value === undefined || isNaN(value)) {
+    if (value === null || value === undefined || Number.isNaN(value)) {
       return `0 ${circumference}`;
     }
     const v = Math.max(0, Math.min(value, max));
@@ -545,7 +601,7 @@ export default function AdminDeviceDataPage() {
     return `${len} ${circumference}`;
   };
 
-  // Initial data load (same logic as user page, adapted to deviceId)
+  // Initial data load (latest sensor + latest config)
   useEffect(() => {
     let mounted = true;
 
@@ -560,7 +616,6 @@ export default function AdminDeviceDataPage() {
         const logs = res.ok ? await res.json() : [];
 
         if (Array.isArray(logs) && logs.length > 0) {
-          // Assuming logs are oldest to newest
           const last = logs[logs.length - 1];
 
           setLiveHistory(logs.slice(-5));
@@ -568,7 +623,6 @@ export default function AdminDeviceDataPage() {
           setTemperature(last.temperature ?? null);
           setHumidity(last.humidity ?? null);
 
-          // Map numeric or string statuses to "ON"/"OFF"
           setAcFan(
             last.ac_fan_status === 1 || last.ac_fan_status === "ON"
               ? "ON"
@@ -624,7 +678,7 @@ export default function AdminDeviceDataPage() {
     };
   }, [deviceId]);
 
-  // Live socket updates (same as user page, but deviceId and admin)
+  // Live socket updates
   useEffect(() => {
     let mounted = true;
     let ioInstance: any = null;
@@ -688,10 +742,18 @@ export default function AdminDeviceDataPage() {
           setHumidity(rec.humidity);
 
           setAcFan(
-            payload.ac_fan_status === 1 ? "ON" : payload.ac_fan_status === 0 ? "OFF" : "OFF"
+            payload.ac_fan_status === 1
+              ? "ON"
+              : payload.ac_fan_status === 0
+              ? "OFF"
+              : "OFF"
           );
           setDcFan(
-            payload.dc_fan_status === 1 ? "ON" : payload.dc_fan_status === 0 ? "OFF" : "OFF"
+            payload.dc_fan_status === 1
+              ? "ON"
+              : payload.dc_fan_status === 0
+              ? "OFF"
+              : "OFF"
           );
 
           setCircularRpm(rec.circular_fan_speed);
@@ -723,7 +785,7 @@ export default function AdminDeviceDataPage() {
     };
   }, [deviceId]);
 
-  // Inactivity based offline detection (same as user)
+  // Inactivity based offline detection
   useEffect(() => {
     const interval = setInterval(() => {
       const last = lastReceivedRef.current;
@@ -748,7 +810,7 @@ export default function AdminDeviceDataPage() {
     return () => clearInterval(interval);
   }, []);
 
-  // Historical config history for charts (admin extra)
+  // Historical config history for charts
   useEffect(() => {
     const fetchHistory = async () => {
       try {
@@ -790,6 +852,107 @@ export default function AdminDeviceDataPage() {
       fetchHistory();
     }
   }, [deviceId, historyRange, historyCustomStart, historyCustomEnd]);
+
+  // Logs tab: default last 30 days
+  useEffect(() => {
+    const now = new Date();
+    const past = new Date(now);
+    past.setDate(now.getDate() - 30);
+
+    const toIsoLocal = (d: Date) =>
+      `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(
+        d.getDate()
+      )}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+
+    setFromDateTime(toIsoLocal(past));
+    setToDateTime(toIsoLocal(now));
+  }, []);
+
+  const fetchLogs = async () => {
+    if (!deviceId || !fromDateTime || !toDateTime) return;
+
+    setLogsLoading(true);
+    setLogsError("");
+
+    try {
+      const url = new URL(`${API_BASE_URL}/api/devices/${deviceId}/recent`);
+      url.searchParams.set("start", fromDateTime);
+      url.searchParams.set("end", toDateTime);
+
+      const res = await fetch(url.toString());
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data?.message || "Failed to fetch logs");
+      }
+
+      setLogs(Array.isArray(data) ? data : []);
+    } catch (e: any) {
+      setLogsError(e.message || "Failed to fetch logs");
+      setLogs([]);
+    } finally {
+      setLogsLoading(false);
+    }
+  };
+
+  // Auto fetch logs when device and default range ready
+  useEffect(() => {
+    if (deviceId && fromDateTime && toDateTime) {
+      fetchLogs();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deviceId, fromDateTime, toDateTime]);
+
+  const downloadExcel = () => {
+    const headers = [
+      "Sl. No.",
+      "Date",
+      "Time",
+      "Device Name",
+      "Temperature",
+      "Humidity",
+      "Set Temperature",
+      "Set Humidity",
+      "AC Fan Status",
+      "DC Fan Status",
+      "Circular Fan Speed",
+      "Operation Mode",
+      "Device Status",
+    ];
+
+    const rows = logs.map((l, idx) => [
+      idx + 1,
+      toDate(l.timestamp),
+      toTime(l.timestamp),
+      l.device_name,
+      l.temperature ?? "",
+      l.humidity ?? "",
+      l.set_temperature ?? "",
+      l.set_humidity ?? "",
+      getFanStatus(l.ac_fan_status),
+      getFanStatus(l.dc_fan_status),
+      l.circular_fan_speed ?? "",
+      l.operation_mode ?? "",
+      getDeviceStatus(l.device_status),
+    ]);
+
+    const csv = [headers, ...rows].map((r) => r.join(",")).join("\n");
+    const blob = new Blob([csv], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${deviceId || "device"}-logs.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
+  const logsInfoLine = useMemo(() => {
+    if (!deviceId || !fromDateTime || !toDateTime) return "";
+    return `Device: ${deviceId} | From: ${fromDateTime} | To: ${toDateTime}`;
+  }, [deviceId, fromDateTime, toDateTime]);
 
   // Loading and error UIs
   const LoadingShimmer = () => (
@@ -913,13 +1076,24 @@ export default function AdminDeviceDataPage() {
               >
                 Historical Trends
               </button>
+              <button
+                type="button"
+                className={`px-4 py-2 text-sm font-medium border-b-2 ${
+                  activeTab === "logs"
+                    ? "border-emerald-500 text-emerald-700"
+                    : "border-transparent text-slate-500 hover:text-slate-700"
+                }`}
+                onClick={() => setActiveTab("logs")}
+              >
+                Logs
+              </button>
             </div>
           </div>
 
           {/* Live View Tab */}
           {activeTab === "live" && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* LEFT: Live sensor data (same as user page) */}
+              {/* LEFT: Live sensor data */}
               <div className="space-y-4">
                 {/* Environmental Data */}
                 <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
@@ -1100,7 +1274,7 @@ export default function AdminDeviceDataPage() {
                 </div>
               </div>
 
-              {/* RIGHT: Live 5-point charts (same as user page) */}
+              {/* RIGHT: Live 5-point charts */}
               <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
                   <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
@@ -1267,7 +1441,7 @@ export default function AdminDeviceDataPage() {
             </div>
           )}
 
-          {/* Historical View Tab */}
+          {/* Historical Trends Tab */}
           {activeTab === "history" && (
             <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
@@ -1455,6 +1629,163 @@ export default function AdminDeviceDataPage() {
                     </ResponsiveContainer>
                   </div>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Logs Tab (same as user logs page, but for single deviceId) */}
+          {activeTab === "logs" && (
+            <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
+              <h2 className="text-lg font-bold text-slate-800 mb-4">
+                Device Data Logs
+              </h2>
+
+              {/* Filters */}
+              <div className="bg-slate-50 p-4 rounded-md shadow flex flex-col md:flex-row gap-3 md:items-end mb-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    From
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={fromDateTime}
+                    onChange={(e) => setFromDateTime(e.target.value)}
+                    className="border rounded px-3 py-2"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    To
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={toDateTime}
+                    onChange={(e) => setToDateTime(e.target.value)}
+                    className="border rounded px-3 py-2"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={fetchLogs}
+                    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
+                  >
+                    Submit
+                  </button>
+                  <button
+                    onClick={downloadExcel}
+                    className="px-4 py-2 border border-green-600 text-green-700 rounded hover:bg-green-50 text-sm"
+                  >
+                    Export Data
+                  </button>
+                </div>
+              </div>
+
+              {/* Info line */}
+              {logsInfoLine && (
+                <div className="text-sm text-gray-600 mb-3">
+                  {logsInfoLine}
+                </div>
+              )}
+
+              {/* Logs error */}
+              {logsError && (
+                <div className="mb-3 text-sm text-red-600 font-medium">
+                  {logsError}
+                </div>
+              )}
+
+              {/* Table */}
+              <div className="overflow-x-auto bg-white rounded-md shadow">
+                <table className="min-w-full text-left border">
+                  <thead className="bg-gray-100">
+                    <tr>
+                      <th className="p-2 border text-sm">Sl. No.</th>
+                      <th className="p-2 border text-sm">Date</th>
+                      <th className="p-2 border text-sm">Time</th>
+                      <th className="p-2 border text-sm">Device Name</th>
+                      <th className="p-2 border text-sm">Temperature</th>
+                      <th className="p-2 border text-sm">Humidity</th>
+                      <th className="p-2 border text-sm">
+                        Set Temperature
+                      </th>
+                      <th className="p-2 border text-sm">Set Humidity</th>
+                      <th className="p-2 border text-sm">
+                        AC Fan Status
+                      </th>
+                      <th className="p-2 border text-sm">
+                        DC Fan Status
+                      </th>
+                      <th className="p-2 border text-sm">
+                        Circular Fan Speed
+                      </th>
+                      <th className="p-2 border text-sm">Operation Mode</th>
+                      <th className="p-2 border text-sm">Device Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {logsLoading ? (
+                      <tr>
+                        <td
+                          className="p-4 text-center text-sm"
+                          colSpan={13}
+                        >
+                          Loading logs...
+                        </td>
+                      </tr>
+                    ) : logs.length === 0 ? (
+                      <tr>
+                        <td
+                          className="p-4 text-center text-sm"
+                          colSpan={13}
+                        >
+                          No logs found
+                        </td>
+                      </tr>
+                    ) : (
+                      logs.map((l, idx) => (
+                        <tr key={l._id || idx} className="text-sm">
+                          <td className="p-2 border">{idx + 1}</td>
+                          <td className="p-2 border">
+                            {toDate(l.timestamp)}
+                          </td>
+                          <td className="p-2 border">
+                            {toTime(l.timestamp)}
+                          </td>
+                          <td className="p-2 border">
+                            {l.device_name}
+                          </td>
+                          <td className="p-2 border">
+                            {l.temperature ?? ""}
+                          </td>
+                          <td className="p-2 border">
+                            {l.humidity ?? ""}
+                          </td>
+                          <td className="p-2 border">
+                            {l.set_temperature ?? ""}
+                          </td>
+                          <td className="p-2 border">
+                            {l.set_humidity ?? ""}
+                          </td>
+                          <td className="p-2 border">
+                            {getFanStatus(l.ac_fan_status)}
+                          </td>
+                          <td className="p-2 border">
+                            {getFanStatus(l.dc_fan_status)}
+                          </td>
+                          <td className="p-2 border">
+                            {l.circular_fan_speed ?? ""}
+                          </td>
+                          <td className="p-2 border">
+                            {l.operation_mode ?? ""}
+                          </td>
+                          <td className="p-2 border">
+                            {getDeviceStatus(l.device_status)}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           )}
