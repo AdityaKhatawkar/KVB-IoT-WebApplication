@@ -248,42 +248,37 @@ exports.getPresetAccessForUser = async (req, res) => {
   try {
     const userId = req.params.id;
 
-    // Load user with populated presets
     const user = await User.findById(userId).populate(
       "accessiblePresets.preset"
     );
 
-    const crops = await Crop.find();
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    const presets = crops.map((crop) => {
-      // CASE 1: FREE PRESET → always assigned
-      if (crop.tier === "free") {
-        return {
-          crop,
-          assigned: true,
-          assignedAt: null,
-          expiresAt: null,
-          free: true,
-        };
-      }
+    const allCrops = await Crop.find();
 
-      // CASE 2: LOCKED PRESET
-      const match = user.accessiblePresets.find((p) => {
-        return p.preset && p.preset._id.toString() === crop._id.toString();
-      });
+    const presets = allCrops.map((crop) => {
+      const match = user.accessiblePresets.find(
+        (p) => p.preset && p.preset._id.toString() === crop._id.toString()
+      );
+
+      const assigned = crop.tier === "free" || !!match;
+
+      const expiresAt = match?.expiresAt || null;
+      const expired = expiresAt ? new Date(expiresAt) < new Date() : false;
 
       return {
         crop,
-        assigned: !!match,
-        assignedAt: match?.assignedAt || null,
-        expiresAt: match?.expiresAt || null,
-        free: false,
+        free: crop.tier === "free",
+        assigned,
+        expired,
+        expiresAt,
+        locked: !assigned, // 🚀 NEW: Not free + not assigned
       };
     });
 
     res.json(presets);
   } catch (err) {
-    console.error("Error loading preset access:", err);
+    console.error(err);
     res.status(500).json({ message: "Server error" });
   }
 };
