@@ -131,6 +131,11 @@
 //!Version 2
 
 const User = require("../models/User");
+const DeviceModel = require("../models/deviceModel");
+const DeviceConfig = require("../models/deviceConfig");
+const DeviceMetadata = require("../models/DeviceMetadata");
+const DeviceHistory = require("../models/DeviceHistory");
+const Firmware = require("../models/Firmware");
 
 // USER DASHBOARD
 exports.userDashboard = async (req, res) => {
@@ -179,18 +184,22 @@ exports.searchUser = async (req, res) => {
   try {
     const { query } = req.query;
 
+    if (!query) return res.json([]);
+
+    const exactRegex = new RegExp(`^${query}$`, "i");
+
     const users = await User.find(
       {
         $or: [
-          { name: { $regex: query, $options: "i" } },
-          { phone: { $regex: query, $options: "i" } },
-          { email: { $regex: query, $options: "i" } },
+          { name: exactRegex },
+          { phone: exactRegex },
+          { email: exactRegex },
+          { devices: exactRegex }, // device exact match
         ],
       },
       "name phone email location devices"
     );
 
-    // flatten location for frontend compatibility
     const formatted = users.map((u) => ({
       _id: u._id,
       name: u.name,
@@ -206,6 +215,53 @@ exports.searchUser = async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 };
+
+// DELETE USER AND THEIR DEVICES
+exports.deleteUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    // 1. Find user
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const deviceNames = user.devices || [];
+
+    // 2. If user has devices, delete related entries from all tables
+    if (deviceNames.length > 0) {
+      await DeviceModel.deleteMany({
+        device_name: { $in: deviceNames },
+      });
+
+      await DeviceConfig.deleteMany({
+        device_name: { $in: deviceNames },
+      });
+
+      await DeviceMetadata.deleteMany({
+        device_name: { $in: deviceNames },
+      });
+
+      await DeviceHistory.deleteMany({
+        device_name: { $in: deviceNames },
+      });
+
+      await Firmware.deleteMany({
+        deviceName: { $in: deviceNames },
+      });
+    }
+
+    // 3. Delete the user
+    await User.findByIdAndDelete(userId);
+
+    res.json({
+      message: "User and all associated device data deleted successfully",
+    });
+  } catch (err) {
+    console.error("Delete User Error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 
 // NEW FROM V2: Get user devices
 exports.getUserDevices = async (req, res) => {
@@ -295,17 +351,28 @@ exports.removeDevice = async (req, res) => {
       return res.status(400).json({ error: "Phone and device are required" });
     }
 
+    // 1. Remove device from user's devices list
     const user = await User.findOneAndUpdate(
       { phone },
       { $pull: { devices: device } },
       { new: true }
     );
 
-    if (!user) return res.status(404).json({ error: "User not found" });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
 
+    // 2. Delete device data from ALL device-related collections
+    await DeviceModel.deleteMany({ device_name: device });
+    await DeviceConfig.deleteMany({ device_name: device });
+    await DeviceMetadata.deleteMany({ device_name: device });
+    await DeviceHistory.deleteMany({ device_name: device });
+    await Firmware.deleteMany({ deviceName: device });
+
+    // 3. Return success
     res.json({
       success: true,
-      message: "Device removed successfully",
+      message: "Device and all related data removed successfully",
       user: {
         id: user._id,
         name: user.name,

@@ -274,9 +274,9 @@ return (
 
           {/* LEFT SIDE */}
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-              <span className="text-2xl">⚙️</span>
-            </div>
+            {/* <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center"> */}
+              {/* <span className="text-2xl">⚙️</span> */}
+            {/* </div> */}
 
             <div>
               <h1 className="text-2xl font-bold">Device Control</h1>
@@ -699,7 +699,7 @@ return (
               </>
             ) : (
               <>
-                <span>💾</span>
+                {/* <span>💾</span> */}
                 <span>Save Configuration</span>
               </>
             )}

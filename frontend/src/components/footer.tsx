@@ -134,7 +134,7 @@ export function AdminFooterCopyright() {
   return (
     <footer className="w-full fixed bottom-0 left-0 bg-white border-t border-gray-200 py-3 z-50">
       <p className="text-center text-gray-500 text-sm">
-        © 2024 KVB Green Energies. All rights reserved.
+        © 2026 KVB Green Energies. All rights reserved.
       </p>
     </footer>
   );
