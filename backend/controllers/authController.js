@@ -238,8 +238,11 @@ exports.forgotPassword = async (req, res) => {
       user.resetPasswordToken = undefined;
       user.resetPasswordExpires = undefined;
       await user.save({ validateBeforeSave: false });
-
-      return res.status(500).json({ message: "Error sending email" });
+      console.error(emailErr);
+      return res.status(500).json({ 
+        message: "Error sending email", 
+        detailedError: emailErr.message // <--- Add this!
+      });
     }
   } catch (err) {
     console.error("❌ [DEBUG] CRITICAL SERVER ERROR:", err);
