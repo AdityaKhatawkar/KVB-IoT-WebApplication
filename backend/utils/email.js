@@ -6,14 +6,11 @@ async function sendPasswordResetEmail(toEmail, resetUrl) {
     const transporter = nodemailer.createTransport({
       host: "smtp-relay.brevo.com",
       port: 587,
-      secure: false, // False for port 587
+      secure: false, 
       auth: {
-        user: process.env.EMAIL_USER, // Render Env Var (The 948ba... ID)
-        pass: process.env.EMAIL_PASS, // Render Env Var (The long xsmtpsib... key)
+        user: process.env.EMAIL_USER, 
+        pass: process.env.EMAIL_PASS, 
       },
-      // 👇 CRITICAL FIX FOR RENDER TIMEOUTS
-      // This forces the connection to use IPv4. 
-      // Render's IPv6 often gets blocked/throttled by email providers.
       family: 4, 
     });
 
