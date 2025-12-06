@@ -24,6 +24,7 @@ import {
 
 import { User } from "@/types/admin";
 import AdminSidebarLayout from "@/components/admin/AdminSidebarLayout";
+const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 export default function CustomersPage() {
   const navigate = useNavigate();
@@ -42,7 +43,7 @@ export default function CustomersPage() {
     if (!token) return;
     try {
       setLoading(true);
-      const res = await axios.get("http://localhost:5000/api/users", {
+      const res = await axios.get("${API_URL}/api/users", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(res.data || []);
@@ -59,7 +60,7 @@ export default function CustomersPage() {
     if (!search.trim()) return fetchUsers();
     try {
       const res = await axios.get(
-        `http://localhost:5000/api/users/search?query=${encodeURIComponent(search)}`,
+        `${API_URL}/api/users/search?query=${encodeURIComponent(search)}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setUsers(res.data || []);
@@ -81,7 +82,7 @@ export default function CustomersPage() {
     if (!selectedUser) return;
 
     try {
-      await axios.delete(`http://localhost:5000/api/users/${selectedUser._id}`, {
+      await axios.delete(`${API_URL}/api/users/${selectedUser._id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
