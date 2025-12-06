@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 type Preset = {
   _id: string;
@@ -62,7 +63,7 @@ export default function ManagePresetsPage() {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:5000/api/crops", {
+      const res = await fetch(`${API_URL}/api/crops`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       const data = await res.json();
@@ -79,7 +80,7 @@ export default function ManagePresetsPage() {
   const updatePresetTier = async (presetId: string, tier: "free" | "locked") => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:5000/api/crops/${presetId}/tier`, {
+      const res = await fetch(`${API_URL}/api/crops/${presetId}/tier`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -113,7 +114,7 @@ export default function ManagePresetsPage() {
       const token = localStorage.getItem("token");
       const formData = new FormData();
       formData.append("file", selectedFile);
-      const res = await fetch("http://localhost:5000/api/crops/upload", {
+      const res = await fetch(`${API_URL}/api/crops/upload`, {
         method: "POST",
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         body: formData

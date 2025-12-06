@@ -464,7 +464,7 @@ useEffect(() => {
 
   {/* Removed dropdown → Added static text */}
   <div className="text-sm text-slate-600 font-medium">
-    Showing last 5 readings
+    Showing latest readings
   </div>
 </div>
 

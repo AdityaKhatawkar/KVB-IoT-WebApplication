@@ -32,6 +32,7 @@ import {
 import { ArrowLeft, Plus, Trash2, Settings2 } from "lucide-react";
 
 import { User } from "@/types/admin";
+const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 // =============================
 // COMPONENT
@@ -81,7 +82,7 @@ export default function ManageDevicesPage() {
     try {
       const names = deviceList.join(",");
       const res = await axios.get(
-        `http://localhost:5000/api/devices/metadata?deviceNames=${encodeURIComponent(
+        `${API_URL}/api/devices/metadata?deviceNames=${encodeURIComponent(
           names
         )}`,
         { headers: { Authorization: `Bearer ${token}` } }
@@ -125,7 +126,7 @@ export default function ManageDevicesPage() {
       setLoading(true);
 
       const userRes = await axios.get(
-        `http://localhost:5000/api/users/${userId}`,
+        `${API_URL}/api/users/${userId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -168,7 +169,7 @@ export default function ManageDevicesPage() {
 
     try {
       await axios.patch(
-        `http://localhost:5000/api/devices/metadata/${deviceId}`,
+        `${API_URL}/api/devices/metadata/${deviceId}`,
         { active: value },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -201,7 +202,7 @@ export default function ManageDevicesPage() {
 
     try {
       await axios.patch(
-        `http://localhost:5000/api/devices/metadata/${deviceId}`,
+        `${API_URL}/api/devices/metadata/${deviceId}`,
         {
           subscriptionStart: now.toISOString(),
           subscriptionEnd: end.toISOString(),
@@ -226,7 +227,7 @@ export default function ManageDevicesPage() {
 
     try {
       await axios.post(
-        "http://localhost:5000/api/users/device/add",
+        `${API_URL}/api/users/device/add`,
         { phone: user.phone, device: newDeviceName.trim() },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -253,7 +254,7 @@ export default function ManageDevicesPage() {
 
     try {
       await axios.post(
-        "http://localhost:5000/api/users/device/remove",
+        `${API_URL}/api/users/device/remove`,
         { phone: user.phone, device: deviceToDelete },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -285,7 +286,7 @@ export default function ManageDevicesPage() {
 
     try {
       await axios.post(
-        `http://localhost:5000/api/firmware/upload/${selectedDeviceForFirmware}`,
+        `${API_URL}/api/firmware/upload/${selectedDeviceForFirmware}`,
         formData,
         {
           headers: {
@@ -311,7 +312,7 @@ export default function ManageDevicesPage() {
   const fetchPresetList = async () => {
     try {
       const res = await axios.get(
-        `http://localhost:5000/api/users/${userId}/presets`,
+        `${API_URL}/api/users/${userId}/presets`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setPresetList(res.data);
@@ -323,7 +324,7 @@ export default function ManageDevicesPage() {
   const assignPreset = async (presetId: string) => {
     try {
       await axios.post(
-        `http://localhost:5000/api/users/${userId}/presets/assign`,
+        `${API_URL}/api/users/${userId}/presets/assign`,
         { presetId, days: presetDays },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -337,7 +338,7 @@ export default function ManageDevicesPage() {
   const removePreset = async (presetId: string) => {
     try {
       await axios.post(
-        `http://localhost:5000/api/users/${userId}/presets/remove`,
+        `${API_URL}/api/users/${userId}/presets/remove`,
         { presetId },
         { headers: { Authorization: `Bearer ${token}` } }
       );

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import AdminSidebarLayout from "../../../components/admin/AdminSidebarLayout";
+const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 interface DeviceHistory {
   _id: string;
@@ -66,7 +67,7 @@ export default function DeviceHistoryPage() {
           return;
         }
 
-        let url = `http://localhost:5000/api/device-config/${deviceName}/history`;
+        let url = `${API_URL}/api/device-config/${deviceName}/history`;
         const params: Record<string, string> = {};
         if (startDate) params.start = startDate; // yyyy-mm-dd from input
         if (endDate) params.end = endDate;

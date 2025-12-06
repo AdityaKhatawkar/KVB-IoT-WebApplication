@@ -43,7 +43,7 @@ export default function CustomersPage() {
     if (!token) return;
     try {
       setLoading(true);
-      const res = await axios.get("${API_URL}/api/users", {
+      const res = await axios.get(`${API_URL}/api/users`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(res.data || []);
