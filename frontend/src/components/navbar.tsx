@@ -189,7 +189,7 @@ useEffect(() => {
                 onClick={() => setProductsDropdownOpen((v) => !v)}
                 className="relative text-gray-700 font-medium transition duration-200 hover:text-green-600 hover:scale-105 flex items-center space-x-1"
               >
-                Products <ChevronDown className="w-4 h-4 ml-1" />
+                {/* Products <ChevronDown className="w-4 h-4 ml-1" /> */}
               </button>
 
               <div
@@ -214,7 +214,7 @@ useEffect(() => {
               to="/about"
               className="text-gray-700 font-medium hover:text-green-600 hover:scale-105 transition"
             >
-              About Us
+              {/* About Us */}
             </Link>
 
             {isAuthenticated && user?.role !== "admin" && (
@@ -226,7 +226,7 @@ useEffect(() => {
                   Device Records
                 </Link>
                 <Link to="/user-dashboard/config-logs" className="nav-link">
-                  Config Logs
+                  Presets
                 </Link>
               </>
             )}

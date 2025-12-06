@@ -14,4 +14,7 @@ const deviceSchema = new mongoose.Schema({
   timestamp: { type: Date, default: Date.now },
 });
 
-module.exports = mongoose.model("DeviceData", deviceSchema);
+deviceSchema.index({ timestamp: 1 }, { expireAfterSeconds: 60 * 60 * 24 * 31 });
+
+module.exports =
+  mongoose.models.DeviceData || mongoose.model("DeviceData", deviceSchema);

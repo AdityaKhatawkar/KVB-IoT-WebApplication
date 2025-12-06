@@ -457,41 +457,16 @@ useEffect(() => {
           {/* RIGHT: Live 5-point charts (replaced) */}
           <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-              <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                <span className="text-blue-500">📈</span>
-                LIVE TRENDS
-              </h2>
-              <div className="flex items-center gap-2">
-                <select
-                  className="border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white hover:border-slate-400 transition-colors"
-                  value={range}
-                  onChange={(e) => setRange(e.target.value)}
-                >
-                  <option value="1d">Last 1 day</option>
-                  <option value="5d">Last 5 days</option>
-                  <option value="10d">Last 10 days</option>
-                  <option value="15d">Last 15 days</option>
-                  <option value="30d">Last 30 days</option>
-                  <option value="custom">Custom</option>
-                </select>
-                {range === "custom" && (
-                  <div className="flex gap-2">
-                    <input
-                      type="date"
-                      className="border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white hover:border-slate-400 transition-colors"
-                      value={customStart}
-                      onChange={(e) => setCustomStart(e.target.value)}
-                    />
-                    <input
-                      type="date"
-                      className="border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white hover:border-slate-400 transition-colors"
-                      value={customEnd}
-                      onChange={(e) => setCustomEnd(e.target.value)}
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
+  <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+    <span className="text-blue-500">📈</span>
+    LIVE TRENDS
+  </h2>
+
+  {/* Removed dropdown → Added static text */}
+  <div className="text-sm text-slate-600 font-medium">
+    Showing last 5 readings
+  </div>
+</div>
 
             <div className="space-y-6">
               {/* Temperature Live Chart (uses liveHistory up to 5 points) */}
@@ -531,13 +506,21 @@ useEffect(() => {
                       />
                       <YAxis stroke="#64748b" fontSize={10} />
                       <Tooltip
-                        contentStyle={{
-                          backgroundColor: "rgba(255, 255, 255, 0.95)",
-                          border: "1px solid #e2e8f0",
-                          borderRadius: "8px",
-                          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-                        }}
-                      />
+  labelFormatter={(v) => {
+    try {
+      const d = new Date(v);
+      return d.toLocaleDateString("en-GB") + " " + d.toLocaleTimeString();
+    } catch {
+      return v;
+    }
+  }}
+  contentStyle={{
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    border: "1px solid #e2e8f0",
+    borderRadius: "8px",
+    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+  }}
+/>
                       <Area type="monotone" dataKey="temperature" stroke="#ef4444" strokeWidth={2} fill="url(#tempGradient)" name="°C" />
                     </AreaChart>
                   </ResponsiveContainer>
@@ -581,13 +564,21 @@ useEffect(() => {
                       />
                       <YAxis stroke="#64748b" fontSize={10} />
                       <Tooltip
-                        contentStyle={{
-                          backgroundColor: "rgba(255, 255, 255, 0.95)",
-                          border: "1px solid #e2e8f0",
-                          borderRadius: "8px",
-                          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-                        }}
-                      />
+  labelFormatter={(v) => {
+    try {
+      const d = new Date(v);
+      return d.toLocaleDateString("en-GB") + " " + d.toLocaleTimeString();
+    } catch {
+      return v;
+    }
+  }}
+  contentStyle={{
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    border: "1px solid #e2e8f0",
+    borderRadius: "8px",
+    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+  }}
+/>
                       <Area type="monotone" dataKey="humidity" stroke="#3b82f6" strokeWidth={2} fill="url(#humidityGradient)" name="%" />
                     </AreaChart>
                   </ResponsiveContainer>
