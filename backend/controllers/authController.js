@@ -108,31 +108,100 @@ exports.login = async (req, res) => {
 };
 
 
+// exports.forgotPassword = async (req, res) => {
+//   try {
+//     const { email } = req.body;
+
+//     // 1. Check if email was provided
+//     if (!email) {
+//       return res.status(400).json({ message: "Please provide your email" });
+//     }
+
+//     // 2. Validate email format using regex
+//     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+//     if (!emailRegex.test(email)) {
+//       return res.status(400).json({ message: "Invalid email format" });
+//     }
+
+//     // 3. Check if the email exists in DB
+//     const user = await User.findOne({ email });
+//     if (!user) {
+//       // Do not reveal whether email exists (security best practice)
+//       return res.status(200).json({
+//         message: "If that email is registered you will receive a reset link",
+//       });
+//     }
+
+//     // 4. Generate password reset token
+//     const resetToken = crypto.randomBytes(20).toString("hex");
+//     const hashedToken = crypto
+//       .createHash("sha256")
+//       .update(resetToken)
+//       .digest("hex");
+
+//     user.resetPasswordToken = hashedToken;
+//     user.resetPasswordExpires = Date.now() + 60 * 60 * 1000; // 1 hour
+//     await user.save({ validateBeforeSave: false });
+
+//     // 5. Create reset link
+//     const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+
+//     // 6. Send password reset email
+//     try {
+//       await sendPasswordResetEmail(user.email, resetUrl);
+//       res.json({ message: "Password reset link sent to email" });
+//     } catch (emailErr) {
+//       // Cleanup if email sending fails
+//       user.resetPasswordToken = undefined;
+//       user.resetPasswordExpires = undefined;
+//       await user.save({ validateBeforeSave: false });
+
+//       console.error(emailErr);
+//       res.status(500).json({ message: "Error sending email" });
+//     }
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
+
 exports.forgotPassword = async (req, res) => {
+  console.log("--- [DEBUG] Forgot Password Process Started ---");
+
   try {
     const { email } = req.body;
+    console.log(`[DEBUG] Received request for email: ${email}`);
 
     // 1. Check if email was provided
     if (!email) {
+      console.log("[DEBUG] No email provided in body");
       return res.status(400).json({ message: "Please provide your email" });
     }
 
-    // 2. Validate email format using regex
+    // 2. Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
+      console.log("[DEBUG] Invalid email format");
       return res.status(400).json({ message: "Invalid email format" });
     }
 
     // 3. Check if the email exists in DB
+    console.log("[DEBUG] Querying MongoDB for user...");
     const user = await User.findOne({ email });
+
     if (!user) {
+      console.log("❌ [DEBUG] User NOT found in database.");
+      console.log("[DEBUG] Returning fake success (Security Best Practice).");
       // Do not reveal whether email exists (security best practice)
       return res.status(200).json({
         message: "If that email is registered you will receive a reset link",
       });
     }
 
+    console.log(`✅ [DEBUG] User found: ${user._id}`);
+
     // 4. Generate password reset token
+    console.log("[DEBUG] Generating reset token...");
     const resetToken = crypto.randomBytes(20).toString("hex");
     const hashedToken = crypto
       .createHash("sha256")
@@ -141,26 +210,39 @@ exports.forgotPassword = async (req, res) => {
 
     user.resetPasswordToken = hashedToken;
     user.resetPasswordExpires = Date.now() + 60 * 60 * 1000; // 1 hour
+
+    console.log("[DEBUG] Saving token to user document...");
     await user.save({ validateBeforeSave: false });
+    console.log("[DEBUG] User document updated with token.");
 
     // 5. Create reset link
+    if (!process.env.CLIENT_URL) {
+      console.error(
+        "❌ [CRITICAL] CLIENT_URL is undefined in Environment Variables!"
+      );
+    }
+
     const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+    console.log(`[DEBUG] Generated Reset URL: ${resetUrl}`);
 
     // 6. Send password reset email
     try {
+      console.log("[DEBUG] Attempting to send email via Nodemailer...");
       await sendPasswordResetEmail(user.email, resetUrl);
+      console.log("✅ [DEBUG] Email sent successfully!");
       res.json({ message: "Password reset link sent to email" });
     } catch (emailErr) {
+      console.error("❌ [DEBUG] Email sending FAILED:", emailErr);
+
       // Cleanup if email sending fails
       user.resetPasswordToken = undefined;
       user.resetPasswordExpires = undefined;
       await user.save({ validateBeforeSave: false });
 
-      console.error(emailErr);
-      res.status(500).json({ message: "Error sending email" });
+      return res.status(500).json({ message: "Error sending email" });
     }
   } catch (err) {
-    console.error(err);
+    console.error("❌ [DEBUG] CRITICAL SERVER ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
