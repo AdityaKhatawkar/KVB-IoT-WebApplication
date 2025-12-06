@@ -143,7 +143,7 @@ import ControlDevice from "./pages/user-dashboard/control/ControlDevice";
 
 
 
-import Home from "./pages/Login";
+import Home from "./pages/Home";
 
 export default function App() {
   return (

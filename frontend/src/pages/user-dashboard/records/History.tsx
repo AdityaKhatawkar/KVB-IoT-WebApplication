@@ -98,7 +98,7 @@ export default function DeviceRecordsPage() {
     setError("");
     try {
       // Sensor logs endpoint: deviceController.getRecentByDevice (adjust if different):
-      const url = new URL(`${API_BASE_URL}/api/devices/${selectedDevice}/logs`);
+      const url = new URL(`${API_BASE_URL}/api/devices/${selectedDevice}/recent`);
       url.searchParams.set("start", fromDateTime);
       url.searchParams.set("end", toDateTime);
       const res = await fetch(url.toString());

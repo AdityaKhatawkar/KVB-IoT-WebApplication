@@ -40,9 +40,6 @@ router.post(
   dashboardController.removeDevice
 );
 
-// DELETE USER (also deletes devices)
-router.delete("/users/:id", protect, adminOnly, dashboardController.deleteUser);
-
 // Dashboards
 router.get("/dashboard/user", protect, dashboardController.userDashboard);
 router.get(

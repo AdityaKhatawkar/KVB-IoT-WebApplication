@@ -79,10 +79,10 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-white rounded-3xl shadow-lg p-8">
         <h2 className="text-3xl font-bold text-center mb-6 text-gray-800">
-          Log in to your account
+          Welcome Back
         </h2>
         <p className="text-center text-gray-600 mb-4">
-          KVB Green Energies
+          Sign in to your KVB Green Energies account
         </p>
 
         <form onSubmit={handleLogin} className="space-y-4">

@@ -392,7 +392,7 @@ export default function AdminDeviceDataPage() {
     setLogsError("");
 
     try {
-      const url = new URL(`${API_BASE_URL}/api/devices/${deviceId}/logs`);
+      const url = new URL(`${API_BASE_URL}/api/devices/${deviceId}/recent`);
       url.searchParams.set("start", fromDateTime);
       url.searchParams.set("end", toDateTime);
 
@@ -857,22 +857,15 @@ export default function AdminDeviceDataPage() {
                             fontSize={10}
                           />
                           <YAxis stroke="#64748b" fontSize={10} />
-<Tooltip
-  labelFormatter={(v) => {
-    try {
-      const d = new Date(v);
-      return d.toLocaleDateString("en-GB") + " " + d.toLocaleTimeString();
-    } catch {
-      return v;
-    }
-  }}
-  contentStyle={{
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
-    border: "1px solid #e2e8f0",
-    borderRadius: "8px",
-    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-  }}
-/>
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: "rgba(255, 255, 255, 0.95)",
+                              border: "1px solid #e2e8f0",
+                              borderRadius: "8px",
+                              boxShadow:
+                                "0 4px 12px rgba(0, 0, 0, 0.1)",
+                            }}
+                          />
                           <Area
                             type="monotone"
                             dataKey="temperature"
@@ -939,23 +932,15 @@ export default function AdminDeviceDataPage() {
                             fontSize={10}
                           />
                           <YAxis stroke="#64748b" fontSize={10} />
-<Tooltip
-  labelFormatter={(v) => {
-    try {
-      const d = new Date(v);
-      return d.toLocaleDateString("en-GB") + " " + d.toLocaleTimeString();
-    } catch {
-      return v;
-    }
-  }}
-  contentStyle={{
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
-    border: "1px solid #e2e8f0",
-    borderRadius: "8px",
-    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-  }}
-/>
-
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: "rgba(255, 255, 255, 0.95)",
+                              border: "1px solid #e2e8f0",
+                              borderRadius: "8px",
+                              boxShadow:
+                                "0 4px 12px rgba(0, 0, 0, 0.1)",
+                            }}
+                          />
                           <Area
                             type="monotone"
                             dataKey="humidity"
@@ -1068,23 +1053,15 @@ export default function AdminDeviceDataPage() {
                           fontSize={10}
                         />
                         <YAxis stroke="#64748b" fontSize={10} />
-<Tooltip
-  labelFormatter={(v) => {
-    try {
-      const d = new Date(v);
-      return d.toLocaleDateString("en-GB") + " " + d.toLocaleTimeString();
-    } catch {
-      return v;
-    }
-  }}
-  contentStyle={{
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
-    border: "1px solid #e2e8f0",
-    borderRadius: "8px",
-    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-  }}
-/>
-
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "rgba(255, 255, 255, 0.95)",
+                            border: "1px solid #e2e8f0",
+                            borderRadius: "8px",
+                            boxShadow:
+                              "0 4px 12px rgba(0, 0, 0, 0.1)",
+                          }}
+                        />
                         <Area
                           type="monotone"
                           dataKey="temperature"
@@ -1148,23 +1125,15 @@ export default function AdminDeviceDataPage() {
                           fontSize={10}
                         />
                         <YAxis stroke="#64748b" fontSize={10} />
-<Tooltip
-  labelFormatter={(v) => {
-    try {
-      const d = new Date(v);
-      return d.toLocaleDateString("en-GB") + " " + d.toLocaleTimeString();
-    } catch {
-      return v;
-    }
-  }}
-  contentStyle={{
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
-    border: "1px solid #e2e8f0",
-    borderRadius: "8px",
-    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-  }}
-/>
-
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "rgba(255, 255, 255, 0.95)",
+                            border: "1px solid #e2e8f0",
+                            borderRadius: "8px",
+                            boxShadow:
+                              "0 4px 12px rgba(0, 0, 0, 0.1)",
+                          }}
+                        />
                         <Area
                           type="monotone"
                           dataKey="humidity"

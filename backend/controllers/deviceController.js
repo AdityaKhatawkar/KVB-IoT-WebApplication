@@ -43,10 +43,10 @@ exports.saveData = async (req, res) => {
 
     console.log("📥 Data received:", req.body);
 
-    // 3. Keep only last 20 readings for this specific device
+    // 3. Keep only last 5 readings for this specific device
     const readings = await DeviceData.find({ device_name })
       .sort({ timestamp: -1 })
-      .skip(20);
+      .skip(50);
 
     if (readings.length > 0) {
       const idsToDelete = readings.map((r) => r._id);
@@ -271,30 +271,5 @@ exports.getActiveDeviceCount = async (req, res) => {
   } catch (err) {
     console.error("Error counting active devices:", err);
     res.status(500).json({ message: "Server error" });
-  }
-};
-
-
-// LOGS TAB: Full logs + optional date filtering
-exports.getLogsByDevice = async (req, res) => {
-  try {
-    const { deviceName } = req.params;
-    const { start, end } = req.query;
-
-    const query = { device_name: deviceName };
-
-    // Apply datetime filtering if provided
-    if (start || end) {
-      query.timestamp = {};
-      if (start) query.timestamp.$gte = new Date(start);
-      if (end) query.timestamp.$lte = new Date(end);
-    }
-
-    const logs = await DeviceData.find(query).sort({ timestamp: 1 }); // oldest → newest
-
-    res.json(logs);
-  } catch (err) {
-    console.error("❌ Error fetching logs:", err);
-    res.status(500).send("Error fetching logs");
   }
 };
